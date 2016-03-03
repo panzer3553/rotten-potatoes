@@ -14,17 +14,22 @@ class MoviesController < ApplicationController
     @sort = params[:sort]
     @all_ratings = ['G', 'PG', 'PG-13', 'R']
     @checked_ratings = @all_ratings
-    @checked_ratings = params[:ratings].keys if params[:ratings]
+    if params[:ratings]
+      @checked_ratings = params[:ratings].keys 
+      session[:ratings] = params[:ratings] if !params[:ratings].blank?
+    end
     logger.debug(@checked_ratings)
     @movies = Movie.where(:rating => @checked_ratings)
     if @sort
-      if @sort == "title"
         @movies = @movies.order(@sort)
-      elsif @sort == "release_date"
-        @movies = @movies.order(@sort)
-      end
+        session[:sort] = @sort
     end
-    @movies = @movies.all
+    logger.debug(session[:sort])
+    logger.debug(session[:ratings])
+    if (session[:ratings] && !params[:ratings]) || (session[:sort] && !params[:sort])
+      flash.keep
+      redirect_to movies_path(:sort => session[:sort], :ratings => session[:ratings])
+    end
   end
 
   def new
